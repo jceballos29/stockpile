@@ -46,6 +46,37 @@ public class Order {
     }
 
     /**
+     * Reconstruye un {@code Order} a partir de datos ya persistidos --
+     * uso exclusivo de adaptadores de infraestructura (ej. un repositorio
+     * SQLite leyendo un pedido guardado).
+     * <p>
+     * A diferencia de {@link #open}, NO valida invariantes de negocio de
+     * creación (no exige que empiece OPEN, no valida stock de las líneas
+     * que recibe). Se asume que estos datos vienen de un {@code Order}
+     * previamente valido, que ya paso por esas validaciones antes de
+     * guardarse -- reconstruir no es una decision de negocio nueva, es
+     * recordar una que ya se tomó.
+     *
+     * @param orderId  la identidad del pedido
+     * @param currency la moneda del pedido
+     * @param status   el estado en el que se encuentra actualmente
+     * @param lines    las líneas ya persistidas del pedido
+     * @return un {@code Order} en el estado exacto que se le indicó
+     * @throws NullPointerException si algún parámetro es nulo
+     */
+    public static Order reconstitute(OrderId orderId, Currency currency, OrderStatus status, List<OrderLine> lines) {
+        Objects.requireNonNull(orderId, "El identificador de la orden no puede ser nulo");
+        Objects.requireNonNull(currency, "La moneda de la orden no puede ser nula");
+        Objects.requireNonNull(status, "El estado de la orden no puede ser nulo");
+        Objects.requireNonNull(lines, "Las lineas de la orden no pueden ser nulas");
+
+        Order order = new Order(orderId, currency);
+        order.status = status;
+        order.lines.addAll(lines);
+        return order;
+    }
+
+    /**
      * Agrega (o acumula, si el producto ya estaba en el pedido) una cantidad
      * de un producto, validando que el stock disponible informado alcance.
      *

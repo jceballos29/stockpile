@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -186,5 +187,26 @@ public class OrderTest {
         order.pay();
 
         assertThatThrownBy(order::cancel).isInstanceOf(InvalidOrderStateException.class);
+    }
+
+    @Test
+    void shouldReconstituteOrderWithGivenStatusAndLines() {
+        OrderId orderId = OrderId.newId();
+        OrderLine line = new OrderLine(new ProductId("SKU-LAPTOP"), 2, Money.of(new BigDecimal("999.00"), "USD"));
+
+        Order order = Order.reconstitute(orderId, USD, OrderStatus.PAID, List.of(line));
+
+        assertThat(order.orderId()).isEqualTo(orderId);
+        assertThat(order.status()).isEqualTo(OrderStatus.PAID);
+        assertThat(order.lines()).containsExactly(line);
+    }
+
+    @Test
+    void shouldAllowDispatchingAReconstitutedPaidOrder() {
+        Order order = Order.reconstitute(OrderId.newId(), USD, OrderStatus.PAID, List.of());
+
+        order.dispatch();
+
+        assertThat(order.status()).isEqualTo(OrderStatus.DISPATCHED);
     }
 }
