@@ -86,6 +86,26 @@ public class Product {
         this.stock += quantity;
     }
 
+    /**
+     * Reconstruye un {@code Product} a partir de datos ya persistidos --
+     * uso exclusivo de adaptadores de infraestructura. Mismo criterio que
+     * {@code Order.reconstitute()}: no revalida invariantes de creación,
+     * asume datos provenientes de un {@code Product} previamente valido.
+     *
+     * @param productId la identidad del producto
+     * @param name      el nombre
+     * @param price     el precio unitario
+     * @param stock     el stock actual persistido
+     * @return un {@code Product} con esos datos exactos
+     * @throws NullPointerException si algún parámetro de referencia es nulo
+     */
+    public static Product reconstitute(ProductId productId, String name, Money price, int stock) {
+        Objects.requireNonNull(productId, "El identificador del producto no puede ser nulo");
+        Objects.requireNonNull(name, "El nombre del producto no puede ser nulo");
+        Objects.requireNonNull(price, "El precio del producto no puede ser nulo");
+        return new Product(productId, name, price, stock);
+    }
+
     public ProductId productId() {
         return productId;
     }

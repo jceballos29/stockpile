@@ -121,4 +121,24 @@ class ProductTest {
         assertThatThrownBy(() -> product.restore(0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void shouldReconstituteProductWithGivenStock() {
+        ProductId productId = new ProductId("SKU-LAPTOP");
+
+        Product product = Product.reconstitute(productId, "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 2);
+
+        assertThat(product.productId()).isEqualTo(productId);
+        assertThat(product.stock()).isEqualTo(2);
+    }
+
+    @Test
+    void shouldAllowReservingStockOnAReconstitutedProduct() {
+        Product product = Product.reconstitute(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        product.reserve(3);
+
+        assertThat(product.stock()).isEqualTo(2);
+    }
 }
