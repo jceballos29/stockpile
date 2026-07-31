@@ -53,6 +53,17 @@ public record Money(BigDecimal amount, Currency currency) {
     }
 
     /**
+     * Crea un {@code Money} con monto cero para la moneda dada. Util como
+     * valor inicial al acumular una suma (ver {@code Order.calculateTotal()}).
+     *
+     * @param currency la moneda del monto cero
+     * @return un {@code Money} de valor 0.00 en esa moneda
+     */
+    public static Money zero(Currency currency) {
+        return new Money(BigDecimal.ZERO, currency);
+    }
+
+    /**
      * Suma este monto con {@code other}, devolviendo una nueva instancia.
      * No modifica ni este {@code Money} ni {@code other}.
      *

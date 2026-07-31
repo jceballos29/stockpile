@@ -1,6 +1,7 @@
 package dev.jceballos.stockpile.shared;
 
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,14 +17,14 @@ public class MoneyTest {
     void shouldCreateValidMoney() {
         Money money = Money.of(new BigDecimal("10.00"), "USD");
 
-        Assertions.assertThat(money.amount()).isEqualByComparingTo("10.00");
-        Assertions.assertThat(money.currency()).isEqualTo(USD);
+        assertThat(money.amount()).isEqualByComparingTo("10.00");
+        assertThat(money.currency()).isEqualTo(USD);
     }
 
     @Test
     @DisplayName("Debe rechazar montos negativos")
     void shouldRejectNegativeAmount() {
-        Assertions.assertThatThrownBy(() -> Money.of(new BigDecimal("-5.00"), "USD"))
+        assertThatThrownBy(() -> Money.of(new BigDecimal("-5.00"), "USD"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -35,7 +36,7 @@ public class MoneyTest {
 
         Money result = five.add(ten);
 
-        Assertions.assertThat(result.amount()).isEqualByComparingTo("15.00");
+        assertThat(result.amount()).isEqualByComparingTo("15.00");
     }
 
     @Test
@@ -44,7 +45,7 @@ public class MoneyTest {
         Money usd = Money.of(new BigDecimal("5.00"), "USD");
         Money eur = Money.of(new BigDecimal("5.00"), "EUR");
 
-        Assertions.assertThatThrownBy(() -> usd.add(eur))
+        assertThatThrownBy(() -> usd.add(eur))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -55,7 +56,7 @@ public class MoneyTest {
 
         Money lineTotal = unitPrice.multiply(3);
 
-        Assertions.assertThat(lineTotal.amount()).isEqualByComparingTo("29.97");
+        assertThat(lineTotal.amount()).isEqualByComparingTo("29.97");
     }
 
     @Test
@@ -65,6 +66,14 @@ public class MoneyTest {
 
         original.add(Money.of(new BigDecimal("5.00"), "USD"));
 
-        Assertions.assertThat(original.amount()).isEqualByComparingTo("10.00");
+        assertThat(original.amount()).isEqualByComparingTo("10.00");
+    }
+
+    @Test
+    void shouldCreateZeroMoneyForCurrency() {
+        Money zero = Money.zero(USD);
+
+        assertThat(zero.amount()).isEqualByComparingTo("0.00");
+        assertThat(zero.currency()).isEqualTo(USD);
     }
 }
