@@ -40,8 +40,7 @@ public class OrderTest {
         Order order = Order.open(OrderId.newId(), USD);
         ProductId laptop = new ProductId("SKU-LAPTOP");
 
-        assertThatThrownBy(() -> order.addLine(laptop, 10, Money.of(new BigDecimal("999.00"), "USD"), 5))
-                .isInstanceOf(InsufficientStockException.class);
+        assertThatThrownBy(() -> order.addLine(laptop, 10, Money.of(new BigDecimal("999.00"), "USD"), 5)).isInstanceOf(InsufficientStockException.class);
     }
 
     @Test
@@ -65,8 +64,7 @@ public class OrderTest {
 
         order.addLine(laptop, 3, price, 5);
 
-        assertThatThrownBy(() -> order.addLine(laptop, 3, price, 5))
-                .isInstanceOf(InsufficientStockException.class);
+        assertThatThrownBy(() -> order.addLine(laptop, 3, price, 5)).isInstanceOf(InsufficientStockException.class);
 
         assertThat(order.lines().get(0).quantity()).isEqualTo(3);
     }
@@ -85,8 +83,7 @@ public class OrderTest {
         Order order = Order.open(OrderId.newId(), USD);
         order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
 
-        assertThatThrownBy(() -> order.lines().add(null))
-                .isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> order.lines().add(null)).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
@@ -97,5 +94,97 @@ public class OrderTest {
         second.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
 
         assertThat(first).isEqualTo(second);
+    }
+
+    @Test
+    void shouldRejectAddingLineWhenOrderIsNotOpen() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+        order.pay();
+
+        assertThatThrownBy(() -> order.addLine(new ProductId("SKU-MOUSE"), 1, Money.of(new BigDecimal("25.00"), "USD"), 10)).isInstanceOf(InvalidOrderStateException.class);
+    }
+
+    @Test
+    void shouldTransitionFromOpenToPaid() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        order.pay();
+
+        assertThat(order.status()).isEqualTo(OrderStatus.PAID);
+    }
+
+    @Test
+    void shouldRejectPayingAnEmptyOrder() {
+        Order order = Order.open(OrderId.newId(), USD);
+
+        assertThatThrownBy(order::pay).isInstanceOf(InvalidOrderStateException.class);
+    }
+
+    @Test
+    void shouldRejectPayingAnAlreadyPaidOrder() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+        order.pay();
+
+        assertThatThrownBy(order::pay).isInstanceOf(InvalidOrderStateException.class);
+    }
+
+    @Test
+    void shouldTransitionFromPaidToDispatched() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+        order.pay();
+
+        order.dispatch();
+
+        assertThat(order.status()).isEqualTo(OrderStatus.DISPATCHED);
+    }
+
+    @Test
+    void shouldRejectDispatchingAnOrderThatIsNotPaid() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThatThrownBy(order::dispatch).isInstanceOf(InvalidOrderStateException.class);
+    }
+
+    @Test
+    void shouldRejectDispatchingAnAlreadyDispatchedOrder() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+        order.pay();
+        order.dispatch();
+
+        assertThatThrownBy(order::dispatch).isInstanceOf(InvalidOrderStateException.class);
+    }
+
+    @Test
+    void shouldTransitionFromOpenToCancelled() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        order.cancel();
+
+        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    void shouldAllowCancellingAnEmptyOrder() {
+        Order order = Order.open(OrderId.newId(), USD);
+
+        order.cancel();
+
+        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    void shouldRejectCancellingAnOrderThatIsNotOpen() {
+        Order order = Order.open(OrderId.newId(), USD);
+        order.addLine(new ProductId("SKU-LAPTOP"), 1, Money.of(new BigDecimal("999.00"), "USD"), 5);
+        order.pay();
+
+        assertThatThrownBy(order::cancel).isInstanceOf(InvalidOrderStateException.class);
     }
 }

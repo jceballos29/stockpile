@@ -61,6 +61,7 @@ public class Order {
      *                                      producto excedería {@code availableStock}
      */
     public void addLine(ProductId productId, int quantity, Money unitPrice, int availableStock) {
+        requireStatus(OrderStatus.OPEN);
         Objects.requireNonNull(productId, "El producto no puede ser nulo");
         Objects.requireNonNull(unitPrice, "El precio unitario no puede ser nulo");
         if (quantity <= 0) {
@@ -81,6 +82,51 @@ public class Order {
 
         lines.removeIf(line -> line.productId().equals(productId));
         lines.add(new OrderLine(productId, totalRequested, unitPrice));
+    }
+
+    /**
+     * Marca el pedido como pagado. Requiere que este OPEN y que tenga al
+     * menos una línea -- no tiene sentido pagar un pedido vacío.
+     *
+     * @throws InvalidOrderStateException si el pedido no está OPEN, o si no tiene líneas
+     */
+    public void pay() {
+        requireStatus(OrderStatus.OPEN);
+        if (lines.isEmpty()) {
+            throw new InvalidOrderStateException("No se puede pagar un pedido sin lineas");
+        }
+        this.status = OrderStatus.PAID;
+    }
+
+    /**
+     * Marca el pedido como despachado. Requiere que este PAID.
+     *
+     * @throws InvalidOrderStateException si el pedido no está PAID
+     */
+    public void dispatch() {
+        requireStatus(OrderStatus.PAID);
+        this.status = OrderStatus.DISPATCHED;
+    }
+
+    /**
+     * Cancela el pedido. Solo válido mientras esta OPEN (antes de pagar) --
+     * cancelar un pedido ya pagado implicaría lógica de reembolso, fuera de
+     * alcance de este método (ver brief.md, sección 5).
+     * <p>
+     * A diferencia de {@link #pay()}, SI se puede cancelar un pedido vacío:
+     * abandonar un carrito sin productos es una operación válida.
+     * <p>
+     * Este método no restituye stock -- eso es responsabilidad de la capa
+     * de aplicación (ver plan.md, Fase 5), que va a coordinar la
+     * restitución en Inventory antes o después de llamar a este método.
+     * El dominio {@code order} no conoce, ni debería conocer, al contexto
+     * {@code inventory}.
+     *
+     * @throws InvalidOrderStateException si el pedido no está OPEN
+     */
+    public void cancel() {
+        requireStatus(OrderStatus.OPEN);
+        this.status = OrderStatus.CANCELLED;
     }
 
     /**
@@ -111,6 +157,12 @@ public class Order {
 
     public Currency currency() {
         return currency;
+    }
+
+    private void requireStatus(OrderStatus expected) {
+        if (this.status != expected) {
+            throw InvalidOrderStateException.invalidTransition(expected, this.status);
+        }
     }
 
     private int quantityOf(ProductId productId) {
