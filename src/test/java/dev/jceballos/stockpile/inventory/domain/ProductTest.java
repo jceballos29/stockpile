@@ -62,4 +62,63 @@ class ProductTest {
 
         assertThat(first).isEqualTo(second);
     }
+
+    @Test
+    void shouldReserveStockWhenSufficient() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        product.reserve(3);
+
+        assertThat(product.stock()).isEqualTo(2);
+    }
+
+    @Test
+    void shouldRejectReservingMoreThanAvailableStock() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThatThrownBy(() -> product.reserve(10))
+                .isInstanceOf(InsufficientStockException.class);
+    }
+
+    @Test
+    void shouldNotChangeStockWhenReservationFails() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThatThrownBy(() -> product.reserve(10))
+                .isInstanceOf(InsufficientStockException.class);
+
+        assertThat(product.stock()).isEqualTo(5);
+    }
+
+    @Test
+    void shouldRejectReservingZeroOrNegativeQuantity() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThatThrownBy(() -> product.reserve(0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRestoreStock() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+        product.reserve(3);
+
+        product.restore(3);
+
+        assertThat(product.stock()).isEqualTo(5);
+    }
+
+    @Test
+    void shouldRejectRestoringZeroOrNegativeQuantity() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThatThrownBy(() -> product.restore(0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

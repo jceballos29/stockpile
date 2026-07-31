@@ -18,7 +18,7 @@ public class Product {
     private final ProductId productId;
     private final String name;
     private final Money price;
-    private final int stock;
+    private int stock;
 
     private Product(ProductId productId, String name, Money price, int stock) {
         this.productId = productId;
@@ -51,6 +51,39 @@ public class Product {
             throw new IllegalArgumentException("El stock inicial no puede ser negativo");
         }
         return new Product(productId, name, price, initialStock);
+    }
+
+    /**
+     * Reserva (descuenta) una cantidad de stock, de forma atómica: valida
+     * y descuenta en la misma operación, sin ventana de tiempo entre ambas
+     * que permita una condición de carrera con otra reserva concurrente.
+     *
+     * @param quantity la cantidad a reservar
+     * @throws IllegalArgumentException   si {@code quantity} no es mayor a cero
+     * @throws InsufficientStockException si {@code quantity} supera el stock disponible
+     */
+    public void reserve(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("La cantidad a reservar debe ser mayor a cero");
+        }
+        if (quantity > this.stock) {
+            throw new InsufficientStockException(productId, quantity, this.stock);
+        }
+        this.stock -= quantity;
+    }
+
+    /**
+     * Restituye (devuelve) una cantidad de stock previamente reservada --
+     * típicamente al cancelar un pedido que la había reservado.
+     *
+     * @param quantity la cantidad a restituir
+     * @throws IllegalArgumentException si {@code quantity} no es mayor a cero
+     */
+    public void restore(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("La cantidad a restituir debe ser mayor a cero");
+        }
+        this.stock += quantity;
     }
 
     public ProductId productId() {
