@@ -45,6 +45,7 @@ public class SchemaInitializer {
                         id TEXT PRIMARY KEY,
                         name TEXT NOT NULL,
                         price TEXT NOT NULL,
+                        currency TEXT NOT NULL,
                         stock INTEGER NOT NULL
                     )
                     """);
