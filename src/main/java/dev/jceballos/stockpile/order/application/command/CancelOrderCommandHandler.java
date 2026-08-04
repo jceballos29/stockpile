@@ -5,43 +5,43 @@ import dev.jceballos.stockpile.order.application.port.OrderWriteRepository;
 import dev.jceballos.stockpile.order.application.port.StockReservationPort;
 import dev.jceballos.stockpile.order.domain.Order;
 import dev.jceballos.stockpile.order.domain.OrderLine;
+import dev.jceballos.stockpile.shared.application.port.UnitOfWork;
 
 import java.util.Objects;
 
-/**
- * Orquesta la cancelación de un pedido: valida la transición de estado
- * (delegada al dominio, ver {@code Order.cancel()}), libera el stock
- * reservado por cada línea, y persiste el pedido cancelado.
- */
 public class CancelOrderCommandHandler {
 
     private final OrderWriteRepository orderWriteRepository;
     private final StockReservationPort stockReservationPort;
+    private final UnitOfWork unitOfWork;
 
     public CancelOrderCommandHandler(OrderWriteRepository orderWriteRepository,
-                                     StockReservationPort stockReservationPort) {
+                                     StockReservationPort stockReservationPort,
+                                     UnitOfWork unitOfWork) {
         this.orderWriteRepository = Objects.requireNonNull(orderWriteRepository);
         this.stockReservationPort = Objects.requireNonNull(stockReservationPort);
+        this.unitOfWork = Objects.requireNonNull(unitOfWork);
     }
 
     /**
-     * Ejecuta el comando.
+     * Ejecuta el comando, coordinado como una unidad atómica por
+     * {@code unitOfWork}.
      *
      * @param command el pedido a cancelar
      * @throws OrderNotFoundException si el pedido no existe
-     * @throws dev.jceballos.stockpile.order.domain.InvalidOrderStateException
-     *         si el pedido no está OPEN
      */
     public void handle(CancelOrderCommand command) {
-        Order order = orderWriteRepository.findById(command.orderId())
-                .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
+        unitOfWork.execute(() -> {
+            Order order = orderWriteRepository.findById(command.orderId())
+                    .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
 
-        order.cancel();
+            order.cancel();
 
-        for (OrderLine line : order.lines()) {
-            stockReservationPort.release(line.productId(), line.quantity());
-        }
+            for (OrderLine line : order.lines()) {
+                stockReservationPort.release(line.productId(), line.quantity());
+            }
 
-        orderWriteRepository.save(order);
+            orderWriteRepository.save(order);
+        });
     }
 }

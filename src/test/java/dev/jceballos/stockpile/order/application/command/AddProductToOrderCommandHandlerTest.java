@@ -15,6 +15,7 @@ import dev.jceballos.stockpile.order.infrastructure.integration.InventoryStockRe
 import dev.jceballos.stockpile.shared.Money;
 import dev.jceballos.stockpile.shared.ProductId;
 
+import dev.jceballos.stockpile.shared.application.port.NoOpUnitOfWork;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,8 @@ class AddProductToOrderCommandHandlerTest {
                 new ReserveStockCommandHandler(productWriteRepository),
                 new RestoreStockCommandHandler(productWriteRepository));
 
-        handler = new AddProductToOrderCommandHandler(orderRepository, inventoryReadRepository, stockReservationPort);
+        handler = new AddProductToOrderCommandHandler(
+                orderRepository, inventoryReadRepository, stockReservationPort, new NoOpUnitOfWork());
     }
 
     @Test

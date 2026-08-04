@@ -14,6 +14,7 @@ import dev.jceballos.stockpile.order.infrastructure.integration.InventoryStockRe
 import dev.jceballos.stockpile.shared.Money;
 import dev.jceballos.stockpile.shared.ProductId;
 
+import dev.jceballos.stockpile.shared.application.port.NoOpUnitOfWork;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +41,7 @@ class CancelOrderCommandHandlerTest {
                 new ReserveStockCommandHandler(productRepository),
                 new RestoreStockCommandHandler(productRepository));
 
-        handler = new CancelOrderCommandHandler(orderRepository, stockReservationPort);
+        handler = new CancelOrderCommandHandler(orderRepository, stockReservationPort, new NoOpUnitOfWork());
     }
 
     @Test
