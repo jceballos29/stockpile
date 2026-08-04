@@ -3,7 +3,6 @@ package dev.jceballos.stockpile.inventory.infrastructure.persistence;
 import dev.jceballos.stockpile.infrastructure.persistence.SchemaInitializer;
 import dev.jceballos.stockpile.infrastructure.persistence.SqliteConnectionFactory;
 import dev.jceballos.stockpile.inventory.domain.Product;
-import dev.jceballos.stockpile.inventory.inventory.infrastructure.persistence.SqliteProductWriteRepository;
 import dev.jceballos.stockpile.shared.Money;
 import dev.jceballos.stockpile.shared.ProductId;
 
