@@ -3,6 +3,7 @@ package dev.jceballos.stockpile.order.application.command;
 import dev.jceballos.stockpile.order.application.OrderNotFoundException;
 import dev.jceballos.stockpile.order.application.port.OrderWriteRepository;
 import dev.jceballos.stockpile.order.domain.Order;
+import dev.jceballos.stockpile.shared.application.port.UnitOfWork;
 
 import java.util.Objects;
 
@@ -13,9 +14,11 @@ import java.util.Objects;
 public class PayOrderCommandHandler {
 
     private final OrderWriteRepository orderWriteRepository;
+    private final UnitOfWork unitOfWork;
 
-    public PayOrderCommandHandler(OrderWriteRepository orderWriteRepository) {
+    public PayOrderCommandHandler(OrderWriteRepository orderWriteRepository, UnitOfWork unitOfWork) {
         this.orderWriteRepository = Objects.requireNonNull(orderWriteRepository);
+        this.unitOfWork = Objects.requireNonNull(unitOfWork);
     }
 
     /**
@@ -27,11 +30,13 @@ public class PayOrderCommandHandler {
      *         si el pedido no esta OPEN, o si no tiene lineas
      */
     public void handle(PayOrderCommand command) {
-        Order order = orderWriteRepository.findById(command.orderId())
-                .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
+        unitOfWork.execute(() -> {
+            Order order = orderWriteRepository.findById(command.orderId())
+                    .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
 
-        order.pay();
+            order.pay();
 
-        orderWriteRepository.save(order);
+            orderWriteRepository.save(order);
+        });
     }
 }

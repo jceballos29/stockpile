@@ -22,14 +22,12 @@ import java.util.Optional;
 
 /**
  * Adaptador SQLite de {@code OrderWriteRepository}. {@code save()} escribe
- * en dos tablas ({@code orders}, {@code order_lines}) dentro de una
- * transacción propia -- a diferencia de {@code SqliteProductWriteRepository},
- * que solo toca una tabla con una unica sentencia.
- * <p>
- * NOTA para el Paso 23 ({@code SqliteUnitOfWork}): esta transacción propia
- * va a entrar en tension con una transacción externa que abarque también
- * a Inventory (para AddProductToOrder/CancelOrder). Queda pendiente
- * resolverlo cuando construyamos el coordinador real.
+ * en dos tablas ({@code orders}, {@code order_lines}) pero NO maneja su
+ * propia transacción: el límite transaccional le pertenece a quien orquesta
+ * el caso de uso (ver {@code UnitOfWork}), no al repositorio. Los handlers
+ * que llaman a este método (Pay, Dispatch, AddProductToOrder, Cancel)
+ * son responsables de envolver la operación completa en
+ * {@code unitOfWork.execute(...)}.
  */
 public class SqliteOrderWriteRepository implements OrderWriteRepository {
 
@@ -42,15 +40,10 @@ public class SqliteOrderWriteRepository implements OrderWriteRepository {
     @Override
     public void save(Order order) {
         try {
-            connection.setAutoCommit(false);
             upsertOrderHeader(order);
             replaceOrderLines(order);
-            connection.commit();
         } catch (SQLException e) {
-            rollbackQuietly();
             throw new PersistenceException("Error al guardar el pedido " + order.orderId(), e);
-        } finally {
-            restoreAutoCommit();
         }
     }
 

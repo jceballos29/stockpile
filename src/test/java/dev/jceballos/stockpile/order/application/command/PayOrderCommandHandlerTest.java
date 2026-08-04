@@ -9,6 +9,7 @@ import dev.jceballos.stockpile.order.domain.OrderStatus;
 import dev.jceballos.stockpile.shared.Money;
 import dev.jceballos.stockpile.shared.ProductId;
 
+import dev.jceballos.stockpile.shared.application.port.NoOpUnitOfWork;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ class PayOrderCommandHandlerTest {
     @BeforeEach
     void setUp() {
         orderRepository = new InMemoryOrderWriteRepository();
-        handler = new PayOrderCommandHandler(orderRepository);
+        handler = new PayOrderCommandHandler(orderRepository, new NoOpUnitOfWork());
     }
 
     @Test
