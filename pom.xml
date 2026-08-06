@@ -22,6 +22,7 @@
         <sqlite.jdbc.version>3.46.1.3</sqlite.jdbc.version>
         <junit.version>5.11.0</junit.version>
         <assertj.version>3.27.7</assertj.version>
+        <javafx.version>25</javafx.version>
     </properties>
 
     <dependencies>
@@ -44,6 +45,12 @@
             <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -59,6 +66,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.3.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>dev.jceballos.stockpile.infrastructure.ui.Main</mainClass>
+                </configuration>
             </plugin>
 
             <plugin>

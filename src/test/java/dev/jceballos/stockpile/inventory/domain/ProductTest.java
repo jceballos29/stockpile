@@ -141,4 +141,34 @@ class ProductTest {
 
         assertThat(product.stock()).isEqualTo(2);
     }
+
+    @Test
+    void shouldRegisterProductWithDescription() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", "Portatil de 14 pulgadas",
+                Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThat(product.description()).isEqualTo("Portatil de 14 pulgadas");
+    }
+
+    @Test
+    void shouldUpdateDetails() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        product.updateDetails("Laptop Pro", "Ahora con mas RAM", Money.of(new BigDecimal("1099.00"), "USD"));
+
+        assertThat(product.name()).isEqualTo("Laptop Pro");
+        assertThat(product.description()).isEqualTo("Ahora con mas RAM");
+        assertThat(product.price().amount()).isEqualByComparingTo("1099.00");
+    }
+
+    @Test
+    void shouldRejectUpdatingWithBlankName() {
+        Product product = Product.register(
+                new ProductId("SKU-LAPTOP"), "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5);
+
+        assertThatThrownBy(() -> product.updateDetails("   ", "desc", Money.of(new BigDecimal("999.00"), "USD")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

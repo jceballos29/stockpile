@@ -20,6 +20,8 @@ public interface ProductWriteRepository {
      */
     void save(Product product);
 
+    void deleteById(ProductId productId);
+
     /**
      * Busca un producto por su identidad, para cargarlo, mutarlo (via sus
      * propios métodos de dominio, ej. `reserve()`) y volver a guardarlo.

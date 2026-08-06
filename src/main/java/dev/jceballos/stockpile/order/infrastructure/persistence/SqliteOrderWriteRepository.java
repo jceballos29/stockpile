@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -49,7 +50,7 @@ public class SqliteOrderWriteRepository implements OrderWriteRepository {
 
     @Override
     public Optional<Order> findById(OrderId orderId) {
-        String headerSql = "SELECT status, currency FROM orders WHERE id = ?";
+        String headerSql = "SELECT status, currency, created_at FROM orders WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
             statement.setString(1, orderId.toString());
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -58,8 +59,9 @@ public class SqliteOrderWriteRepository implements OrderWriteRepository {
                 }
                 OrderStatus status = OrderStatus.valueOf(resultSet.getString("status"));
                 Currency currency = Currency.getInstance(resultSet.getString("currency"));
+                Instant createdAt = Instant.parse(resultSet.getString("created_at"));
                 List<OrderLine> lines = findLines(orderId, currency);
-                return Optional.of(Order.reconstitute(orderId, currency, status, lines));
+                return Optional.of(Order.reconstitute(orderId, currency, status, lines, createdAt));
             }
         } catch (SQLException e) {
             throw new PersistenceException("Error al buscar el pedido " + orderId, e);
@@ -79,11 +81,12 @@ public class SqliteOrderWriteRepository implements OrderWriteRepository {
     }
 
     private void insertOrderHeader(Order order) throws SQLException {
-        String insertSql = "INSERT INTO orders (id, status, currency) VALUES (?, ?, ?)";
+        String insertSql = "INSERT INTO orders (id, status, currency, created_at) VALUES (?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(insertSql)) {
             statement.setString(1, order.orderId().toString());
             statement.setString(2, order.status().name());
             statement.setString(3, order.currency().getCurrencyCode());
+            statement.setString(4, order.createdAt().toString());
             statement.executeUpdate();
         }
     }

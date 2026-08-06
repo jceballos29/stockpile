@@ -14,5 +14,5 @@ import dev.jceballos.stockpile.shared.ProductId;
  * @param price     el precio unitario
  * @param stock     el stock actual disponible
  */
-public record ProductView(ProductId productId, String name, Money price, int stock) {
+public record ProductView(ProductId productId, String name, String description, Money price, int stock) {
 }

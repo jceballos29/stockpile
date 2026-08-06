@@ -69,6 +69,6 @@ class ProductQueryHandlerTest {
     }
 
     private ProductView viewOf(ProductId productId, String name) {
-        return new ProductView(productId, name, Money.of(new BigDecimal("10.00"), "USD"), 5);
+        return new ProductView(productId, name, "", Money.of(new BigDecimal("10.00"), "USD"), 5);
     }
 }

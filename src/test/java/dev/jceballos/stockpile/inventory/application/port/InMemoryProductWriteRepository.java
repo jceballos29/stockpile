@@ -23,6 +23,11 @@ public class InMemoryProductWriteRepository implements ProductWriteRepository {
     }
 
     @Override
+    public void deleteById(ProductId productId) {
+        storage.remove(productId);
+    }
+
+    @Override
     public Optional<Product> findById(ProductId productId) {
         return Optional.ofNullable(storage.get(productId));
     }

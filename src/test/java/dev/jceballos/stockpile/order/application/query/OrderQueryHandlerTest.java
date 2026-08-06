@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +71,6 @@ class OrderQueryHandlerTest {
     }
 
     private OrderView viewOf(OrderId orderId, OrderStatus status) {
-        return new OrderView(orderId, status, List.of(), Money.of(new BigDecimal("0.00"), "USD"));
+        return new OrderView(orderId, status, Instant.now(), List.of(), Money.of(new BigDecimal("0.00"), "USD"));
     }
 }

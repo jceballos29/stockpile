@@ -4,17 +4,14 @@ import dev.jceballos.stockpile.infrastructure.persistence.PersistenceException;
 import dev.jceballos.stockpile.inventory.application.port.ProductQuery;
 import dev.jceballos.stockpile.inventory.application.port.ProductReadRepository;
 import dev.jceballos.stockpile.inventory.application.port.ProductView;
-import dev.jceballos.stockpile.shared.Money;
 import dev.jceballos.stockpile.shared.PagedResult;
 import dev.jceballos.stockpile.shared.ProductId;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,7 +33,7 @@ public class SqliteProductReadRepository implements ProductReadRepository {
 
     @Override
     public Optional<ProductView> findById(ProductId productId) {
-        String sql = "SELECT id, name, price, currency, stock FROM products WHERE id = ?";
+        String sql = "SELECT id, name, description, price, currency, stock FROM products WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, productId.value());
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -75,7 +72,7 @@ public class SqliteProductReadRepository implements ProductReadRepository {
     }
 
     private List<ProductView> findPage(String nameFilter, int page, int pageSize) throws SQLException {
-        String sql = "SELECT id, name, price, currency, stock FROM products WHERE name LIKE ? "
+        String sql = "SELECT id, name, description, price, currency, stock FROM products WHERE name LIKE ? "
                 + "ORDER BY id LIMIT ? OFFSET ?";
         List<ProductView> items = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -93,10 +90,14 @@ public class SqliteProductReadRepository implements ProductReadRepository {
 
     private ProductView toView(ResultSet resultSet) throws SQLException {
         ProductId productId = new ProductId(resultSet.getString("id"));
-        String name = resultSet.getString("name");
-        Currency currency = Currency.getInstance(resultSet.getString("currency"));
-        Money price = new Money(new BigDecimal(resultSet.getString("price")), currency);
-        int stock = resultSet.getInt("stock");
-        return new ProductView(productId, name, price, stock);
+        var data = ProductRowMapper.extractCommonData(resultSet);
+
+        return new ProductView(
+                productId,
+                data.name(),
+                data.description(),
+                data.price(),
+                data.stock()
+        );
     }
 }

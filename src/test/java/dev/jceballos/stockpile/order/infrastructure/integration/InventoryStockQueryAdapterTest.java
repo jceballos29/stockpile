@@ -29,7 +29,7 @@ class InventoryStockQueryAdapterTest {
     @Test
     void shouldReturnAvailableStockThroughInventoryContext() {
         ProductId productId = new ProductId("SKU-LAPTOP");
-        productReadRepository.add(new ProductView(productId, "Laptop", Money.of(new BigDecimal("999.00"), "USD"), 5));
+        productReadRepository.add(new ProductView(productId, "Laptop", "", Money.of(new BigDecimal("999.00"), "USD"), 5));
 
         int stock = adapter.availableStockOf(productId);
 

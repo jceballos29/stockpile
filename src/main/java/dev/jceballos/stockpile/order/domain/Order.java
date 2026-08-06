@@ -3,6 +3,7 @@ package dev.jceballos.stockpile.order.domain;
 import dev.jceballos.stockpile.shared.Money;
 import dev.jceballos.stockpile.shared.ProductId;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -22,12 +23,14 @@ public class Order {
 
     private final OrderId orderId;
     private final Currency currency;
+    private final Instant createdAt;
     private final List<OrderLine> lines = new ArrayList<>();
     private OrderStatus status;
 
-    private Order(OrderId orderId, Currency currency) {
+    private Order(OrderId orderId, Currency currency, Instant createdAt) {
         this.orderId = orderId;
         this.currency = currency;
+        this.createdAt = createdAt;
         this.status = OrderStatus.OPEN;
     }
 
@@ -42,7 +45,7 @@ public class Order {
     public static Order open(OrderId orderId, Currency currency) {
         Objects.requireNonNull(orderId, "El identificador de la orden no puede ser nulo");
         Objects.requireNonNull(currency, "La moneda de la orden no puede ser nula");
-        return new Order(orderId, currency);
+        return new Order(orderId, currency, Instant.now());
     }
 
     /**
@@ -61,16 +64,19 @@ public class Order {
      * @param currency la moneda del pedido
      * @param status   el estado en el que se encuentra actualmente
      * @param lines    las líneas ya persistidas del pedido
+     * @param createdAt el momento real en que el pedido se creó originalmente
+     *                  (no el momento de la reconstitución)
      * @return un {@code Order} en el estado exacto que se le indicó
      * @throws NullPointerException si algún parámetro es nulo
      */
-    public static Order reconstitute(OrderId orderId, Currency currency, OrderStatus status, List<OrderLine> lines) {
+    public static Order reconstitute(OrderId orderId, Currency currency, OrderStatus status, List<OrderLine> lines, Instant createdAt) {
         Objects.requireNonNull(orderId, "El identificador de la orden no puede ser nulo");
         Objects.requireNonNull(currency, "La moneda de la orden no puede ser nula");
         Objects.requireNonNull(status, "El estado de la orden no puede ser nulo");
         Objects.requireNonNull(lines, "Las lineas de la orden no pueden ser nulas");
+        Objects.requireNonNull(createdAt, "La fecha de creacion no puede ser nula");
 
-        Order order = new Order(orderId, currency);
+        Order order = new Order(orderId, currency, createdAt);
         order.status = status;
         order.lines.addAll(lines);
         return order;
@@ -189,6 +195,8 @@ public class Order {
     public Currency currency() {
         return currency;
     }
+
+    public Instant createdAt() { return createdAt; }
 
     private void requireStatus(OrderStatus expected) {
         if (this.status != expected) {

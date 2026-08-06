@@ -6,6 +6,7 @@ import dev.jceballos.stockpile.shared.ProductId;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Currency;
 import java.util.List;
 
@@ -194,7 +195,7 @@ public class OrderTest {
         OrderId orderId = OrderId.newId();
         OrderLine line = new OrderLine(new ProductId("SKU-LAPTOP"), 2, Money.of(new BigDecimal("999.00"), "USD"));
 
-        Order order = Order.reconstitute(orderId, USD, OrderStatus.PAID, List.of(line));
+        Order order = Order.reconstitute(orderId, USD, OrderStatus.PAID, List.of(line), Instant.now());
 
         assertThat(order.orderId()).isEqualTo(orderId);
         assertThat(order.status()).isEqualTo(OrderStatus.PAID);
@@ -203,10 +204,29 @@ public class OrderTest {
 
     @Test
     void shouldAllowDispatchingAReconstitutedPaidOrder() {
-        Order order = Order.reconstitute(OrderId.newId(), USD, OrderStatus.PAID, List.of());
+        Order order = Order.reconstitute(OrderId.newId(), USD, OrderStatus.PAID, List.of(), Instant.now());
 
         order.dispatch();
 
         assertThat(order.status()).isEqualTo(OrderStatus.DISPATCHED);
+    }
+
+    @Test
+    void shouldSetCreatedAtWhenOpeningOrder() {
+        Instant before = Instant.now();
+
+        Order order = Order.open(OrderId.newId(), USD);
+
+        Instant after = Instant.now();
+        assertThat(order.createdAt()).isBetween(before, after);
+    }
+
+    @Test
+    void shouldReconstituteOrderWithGivenCreatedAt() {
+        Instant createdAt = Instant.parse("2026-01-15T10:30:00Z");
+
+        Order order = Order.reconstitute(OrderId.newId(), USD, OrderStatus.OPEN, List.of(), createdAt);
+
+        assertThat(order.createdAt()).isEqualTo(createdAt);
     }
 }

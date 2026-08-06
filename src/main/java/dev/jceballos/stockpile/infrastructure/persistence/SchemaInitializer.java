@@ -25,7 +25,8 @@ public class SchemaInitializer {
                     CREATE TABLE IF NOT EXISTS orders (
                         id TEXT PRIMARY KEY,
                         status TEXT NOT NULL,
-                        currency TEXT NOT NULL
+                        currency TEXT NOT NULL,
+                        created_at TEXT NOT NULL
                     )
                     """);
 
@@ -44,6 +45,7 @@ public class SchemaInitializer {
                     CREATE TABLE IF NOT EXISTS products (
                         id TEXT PRIMARY KEY,
                         name TEXT NOT NULL,
+                        description TEXT NOT NULL,
                         price TEXT NOT NULL,
                         currency TEXT NOT NULL,
                         stock INTEGER NOT NULL

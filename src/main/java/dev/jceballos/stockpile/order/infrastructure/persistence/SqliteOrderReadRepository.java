@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.LinkedHashMap;
@@ -27,8 +28,8 @@ import java.util.Optional;
 /**
  * Adaptador SQLite de {@code OrderReadRepository}. Usa {@code LEFT JOIN}
  * entre {@code orders} y {@code order_lines} para traer el pedido completo
- * (encabezado + lineas) en una sola consulta -- {@code LEFT}, no
- * {@code JOIN} a secas, porque un pedido sin lineas todavia debe aparecer
+ * (encabezado + líneas) en una sola consulta -- {@code LEFT}, no
+ * {@code JOIN} a secas, porque un pedido sin líneas todavía debe aparecer
  * (con cero filas de {@code order_lines} asociadas), no desaparecer del
  * resultado.
  */
@@ -43,12 +44,12 @@ public class SqliteOrderReadRepository implements OrderReadRepository {
     @Override
     public Optional<OrderView> findById(OrderId orderId) {
         String sql = """
-                SELECT o.id AS order_id, o.status, o.currency,
-                       ol.product_id, ol.quantity, ol.unit_price
-                FROM orders o
-                LEFT JOIN order_lines ol ON ol.order_id = o.id
-                WHERE o.id = ?
-                """;
+            SELECT o.id AS order_id, o.status, o.currency, o.created_at,
+                   ol.product_id, ol.quantity, ol.unit_price
+            FROM orders o
+            LEFT JOIN order_lines ol ON ol.order_id = o.id
+            WHERE o.id = ?
+            """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, orderId.toString());
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -86,19 +87,19 @@ public class SqliteOrderReadRepository implements OrderReadRepository {
 
     private List<OrderView> findPage(OrderQuery query) throws SQLException {
         String sql = """
-                SELECT o.id AS order_id, o.status, o.currency,
-                       ol.product_id, ol.quantity, ol.unit_price
-                FROM orders o
-                LEFT JOIN order_lines ol ON ol.order_id = o.id
-                WHERE (? IS NULL OR o.status = ?)
-                  AND o.id IN (
-                      SELECT id FROM orders
-                      WHERE (? IS NULL OR status = ?)
-                      ORDER BY id
-                      LIMIT ? OFFSET ?
-                  )
-                ORDER BY o.id
-                """;
+            SELECT o.id AS order_id, o.status, o.currency, o.created_at,
+                   ol.product_id, ol.quantity, ol.unit_price
+            FROM orders o
+            LEFT JOIN order_lines ol ON ol.order_id = o.id
+            WHERE (? IS NULL OR o.status = ?)
+              AND o.id IN (
+                  SELECT id FROM orders
+                  WHERE (? IS NULL OR status = ?)
+                  ORDER BY created_at DESC
+                  LIMIT ? OFFSET ?
+              )
+            ORDER BY o.created_at DESC
+            """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             String statusFilter = query.status().map(OrderStatus::name).orElse(null);
             statement.setString(1, statusFilter);
@@ -117,6 +118,7 @@ public class SqliteOrderReadRepository implements OrderReadRepository {
         Map<String, OrderId> orderIds = new LinkedHashMap<>();
         Map<String, OrderStatus> statuses = new LinkedHashMap<>();
         Map<String, Currency> currencies = new LinkedHashMap<>();
+        Map<String, Instant> createdAts = new LinkedHashMap<>();
         Map<String, List<OrderLineView>> linesByOrder = new LinkedHashMap<>();
 
         while (resultSet.next()) {
@@ -126,6 +128,7 @@ public class SqliteOrderReadRepository implements OrderReadRepository {
             orderIds.putIfAbsent(rawOrderId, OrderId.of(rawOrderId));
             statuses.putIfAbsent(rawOrderId, OrderStatus.valueOf(resultSet.getString("status")));
             currencies.putIfAbsent(rawOrderId, currency);
+            createdAts.putIfAbsent(rawOrderId, Instant.parse(resultSet.getString("created_at")));
             linesByOrder.putIfAbsent(rawOrderId, new ArrayList<>());
 
             String rawProductId = resultSet.getString("product_id");
@@ -145,7 +148,8 @@ public class SqliteOrderReadRepository implements OrderReadRepository {
             Money total = lines.stream()
                     .map(OrderLineView::lineTotal)
                     .reduce(Money.zero(currency), Money::add);
-            views.add(new OrderView(orderIds.get(rawOrderId), statuses.get(rawOrderId), lines, total));
+            views.add(new OrderView(orderIds.get(rawOrderId), statuses.get(rawOrderId),
+                    createdAts.get(rawOrderId), lines, total));
         }
         return views;
     }
