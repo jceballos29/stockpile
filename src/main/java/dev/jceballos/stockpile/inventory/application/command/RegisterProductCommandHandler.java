@@ -23,7 +23,7 @@ public class RegisterProductCommandHandler {
      * @param command los datos del producto a registrar
      */
     public void handle(RegisterProductCommand command) {
-        Product product = Product.register(command.productId(), command.name(), command.price(), command.initialStock());
+        Product product = Product.register(command.productId(), command.name(), command.description(), command.price(), command.initialStock());
         productWriteRepository.save(product);
     }
 }

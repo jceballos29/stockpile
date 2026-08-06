@@ -3,9 +3,7 @@ package dev.jceballos.stockpile.infrastructure.ui;
 import dev.jceballos.stockpile.infrastructure.persistence.SchemaInitializer;
 import dev.jceballos.stockpile.infrastructure.persistence.SqliteConnectionFactory;
 import dev.jceballos.stockpile.infrastructure.persistence.SqliteUnitOfWork;
-import dev.jceballos.stockpile.inventory.application.command.RegisterProductCommandHandler;
-import dev.jceballos.stockpile.inventory.application.command.ReserveStockCommandHandler;
-import dev.jceballos.stockpile.inventory.application.command.RestoreStockCommandHandler;
+import dev.jceballos.stockpile.inventory.application.command.*;
 import dev.jceballos.stockpile.inventory.application.port.ProductReadRepository;
 import dev.jceballos.stockpile.inventory.application.port.ProductWriteRepository;
 import dev.jceballos.stockpile.inventory.application.query.ProductQueryHandler;
@@ -47,6 +45,8 @@ public final class Main extends Application {
 
     private static RegisterProductCommandHandler registerProductCommandHandler;
     private static ProductQueryHandler productQueryHandler;
+    private static UpdateProductCommandHandler updateProductCommandHandler;
+    private static DeleteProductCommandHandler deleteProductCommandHandler;
     private static AddProductToOrderCommandHandler addProductToOrderCommandHandler;
     private static CancelOrderCommandHandler cancelOrderCommandHandler;
     private static PayOrderCommandHandler payOrderCommandHandler;
@@ -62,37 +62,33 @@ public final class Main extends Application {
         // --- Inventory ---
         ProductWriteRepository productWriteRepository = new SqliteProductWriteRepository(connection);
         ProductReadRepository productReadRepository = new SqliteProductReadRepository(connection);
+        UpdateProductCommandHandler updateProductCommandHandler = new UpdateProductCommandHandler(productWriteRepository);
+        DeleteProductCommandHandler deleteProductCommandHandler = new DeleteProductCommandHandler(productWriteRepository);
 
-        RegisterProductCommandHandler registerProductCommandHandler =
-                new RegisterProductCommandHandler(productWriteRepository);
-        ReserveStockCommandHandler reserveStockCommandHandler =
-                new ReserveStockCommandHandler(productWriteRepository);
-        RestoreStockCommandHandler restoreStockCommandHandler =
-                new RestoreStockCommandHandler(productWriteRepository);
+
+        RegisterProductCommandHandler registerProductCommandHandler = new RegisterProductCommandHandler(productWriteRepository);
+        ReserveStockCommandHandler reserveStockCommandHandler = new ReserveStockCommandHandler(productWriteRepository);
+        RestoreStockCommandHandler restoreStockCommandHandler = new RestoreStockCommandHandler(productWriteRepository);
         ProductQueryHandler productQueryHandler = new ProductQueryHandler(productReadRepository);
 
         // --- Integración order <-> inventory ---
-        InventoryReadRepository inventoryReadRepository =
-                new InventoryStockQueryAdapter(productQueryHandler);
-        StockReservationPort stockReservationPort =
-                new InventoryStockReservationAdapter(reserveStockCommandHandler, restoreStockCommandHandler);
+        InventoryReadRepository inventoryReadRepository = new InventoryStockQueryAdapter(productQueryHandler);
+        StockReservationPort stockReservationPort = new InventoryStockReservationAdapter(reserveStockCommandHandler, restoreStockCommandHandler);
 
         // --- Order ---
         OrderWriteRepository orderWriteRepository = new SqliteOrderWriteRepository(connection);
         OrderReadRepository orderReadRepository = new SqliteOrderReadRepository(connection);
 
-        AddProductToOrderCommandHandler addProductToOrderCommandHandler = new AddProductToOrderCommandHandler(
-                orderWriteRepository, inventoryReadRepository, stockReservationPort, unitOfWork);
-        CancelOrderCommandHandler cancelOrderCommandHandler =
-                new CancelOrderCommandHandler(orderWriteRepository, stockReservationPort, unitOfWork);
-        PayOrderCommandHandler payOrderCommandHandler =
-                new PayOrderCommandHandler(orderWriteRepository, unitOfWork);
-        DispatchOrderCommandHandler dispatchOrderCommandHandler =
-                new DispatchOrderCommandHandler(orderWriteRepository, unitOfWork);
+        AddProductToOrderCommandHandler addProductToOrderCommandHandler = new AddProductToOrderCommandHandler(orderWriteRepository, inventoryReadRepository, stockReservationPort, unitOfWork);
+        CancelOrderCommandHandler cancelOrderCommandHandler = new CancelOrderCommandHandler(orderWriteRepository, stockReservationPort, unitOfWork);
+        PayOrderCommandHandler payOrderCommandHandler = new PayOrderCommandHandler(orderWriteRepository, unitOfWork);
+        DispatchOrderCommandHandler dispatchOrderCommandHandler = new DispatchOrderCommandHandler(orderWriteRepository, unitOfWork);
         OrderQueryHandler orderQueryHandler = new OrderQueryHandler(orderReadRepository);
 
         Main.registerProductCommandHandler = registerProductCommandHandler;
         Main.productQueryHandler = productQueryHandler;
+        Main.updateProductCommandHandler = updateProductCommandHandler;
+        Main.deleteProductCommandHandler = deleteProductCommandHandler;
         Main.addProductToOrderCommandHandler = addProductToOrderCommandHandler;
         Main.cancelOrderCommandHandler = cancelOrderCommandHandler;
         Main.payOrderCommandHandler = payOrderCommandHandler;
@@ -106,6 +102,8 @@ public final class Main extends Application {
     public void start(Stage primaryStage) {
         MainView mainView = new MainView(
                 registerProductCommandHandler,
+                updateProductCommandHandler,
+                deleteProductCommandHandler,
                 productQueryHandler,
                 addProductToOrderCommandHandler,
                 cancelOrderCommandHandler,

@@ -1,6 +1,8 @@
 package dev.jceballos.stockpile.infrastructure.ui;
 
+import dev.jceballos.stockpile.inventory.application.command.DeleteProductCommandHandler;
 import dev.jceballos.stockpile.inventory.application.command.RegisterProductCommandHandler;
+import dev.jceballos.stockpile.inventory.application.command.UpdateProductCommandHandler;
 import dev.jceballos.stockpile.inventory.application.query.ProductQueryHandler;
 import dev.jceballos.stockpile.order.application.command.AddProductToOrderCommandHandler;
 import dev.jceballos.stockpile.order.application.command.CancelOrderCommandHandler;
@@ -17,6 +19,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Ventana principal: sidebar de navegación (izquierda) + área de
@@ -28,6 +31,8 @@ public class MainView {
     private final BorderPane root = new BorderPane();
 
     private final RegisterProductCommandHandler registerProductCommandHandler;
+    private final UpdateProductCommandHandler updateProductCommandHandler;
+    private final DeleteProductCommandHandler deleteProductCommandHandler;
     private final ProductQueryHandler productQueryHandler;
     private final AddProductToOrderCommandHandler addProductToOrderCommandHandler;
     private final CancelOrderCommandHandler cancelOrderCommandHandler;
@@ -36,6 +41,8 @@ public class MainView {
     private final OrderQueryHandler orderQueryHandler;
 
     public MainView(RegisterProductCommandHandler registerProductCommandHandler,
+                    UpdateProductCommandHandler updateProductCommandHandler,
+                    DeleteProductCommandHandler deleteProductCommandHandler,
                     ProductQueryHandler productQueryHandler,
                     AddProductToOrderCommandHandler addProductToOrderCommandHandler,
                     CancelOrderCommandHandler cancelOrderCommandHandler,
@@ -43,6 +50,8 @@ public class MainView {
                     DispatchOrderCommandHandler dispatchOrderCommandHandler,
                     OrderQueryHandler orderQueryHandler) {
         this.registerProductCommandHandler = Objects.requireNonNull(registerProductCommandHandler);
+        this.updateProductCommandHandler = Objects.requireNonNull(updateProductCommandHandler);
+        this.deleteProductCommandHandler = Objects.requireNonNull(deleteProductCommandHandler);
         this.productQueryHandler = Objects.requireNonNull(productQueryHandler);
         this.addProductToOrderCommandHandler = Objects.requireNonNull(addProductToOrderCommandHandler);
         this.cancelOrderCommandHandler = Objects.requireNonNull(cancelOrderCommandHandler);
@@ -55,6 +64,11 @@ public class MainView {
     }
 
     private VBox buildSidebar() {
+
+        Label logo = new Label("📦 Stockpile");
+        logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -primary;");
+        logo.setPadding(new Insets(20, 20, 30, 20));
+
         Button dashboardButton = new Button("Dashboard");
         Button productsButton = new Button("Productos");
         Button ordersButton = new Button("Pedidos");
@@ -67,23 +81,27 @@ public class MainView {
             button.setMaxWidth(Double.MAX_VALUE);
         }
 
-        VBox sidebar = new VBox(8, dashboardButton, productsButton, ordersButton);
-        sidebar.setPadding(new Insets(15));
-        sidebar.setPrefWidth(180);
+        VBox navItems = new VBox(4, dashboardButton, productsButton, ordersButton);
+        navItems.setPadding(new Insets(0, 12, 0, 12));
+
+        VBox sidebar = new VBox(logo, navItems);
         sidebar.getStyleClass().add("sidebar");
         return sidebar;
     }
 
     private void showDashboard() {
-        root.setCenter(new Label("Dashboard: pendiente (próximo paso)"));
+        root.setCenter(new Label("Dashboard: pendiente"));
     }
 
     private void showProducts() {
-        root.setCenter(new Label("Productos: pendiente (próximo paso)"));
+        ProductsView productsView = new ProductsView(
+                registerProductCommandHandler, updateProductCommandHandler,
+                deleteProductCommandHandler, productQueryHandler);
+        root.setCenter(productsView.getRoot());
     }
 
     private void showOrders() {
-        root.setCenter(new Label("Pedidos: pendiente (próximo paso)"));
+        root.setCenter(new Label("Pedidos: pendiente"));
     }
 
     public void show(Stage stage) {
