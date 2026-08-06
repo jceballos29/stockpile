@@ -11,6 +11,7 @@ import dev.jceballos.stockpile.order.application.command.PayOrderCommandHandler;
 import dev.jceballos.stockpile.order.application.query.OrderQueryHandler;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -20,7 +21,6 @@ import javafx.stage.Stage;
 
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.awt.*;
 import java.util.Objects;
 
 /**
@@ -69,24 +69,26 @@ public class MainView {
     private VBox buildSidebar() {
 
         final FontIcon warehouseIcon = new FontIcon("fas-warehouse");
-        final FontIcon listIcon = new FontIcon("fas-list");
-        final FontIcon chartBarIcon = new FontIcon("fas-chart-bar");
-        final FontIcon cartShoppingIcon = new FontIcon("fas-cart-shopping");
+        final FontIcon productsIcon = new FontIcon("fas-boxes");
+        final FontIcon dashboardIcon = new FontIcon("fas-chart-line");
+        final FontIcon ordersIcon = new FontIcon("fas-shopping-cart");
 
-        Label logo = new Label("Stockpile");
+        warehouseIcon.setIconSize(48);
+        warehouseIcon.setStyle("-fx-icon-color: -primary;");
+
+        Label logo = new Label("Stockpile", warehouseIcon);
         logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -primary;");
         logo.setPadding(new Insets(20, 20, 30, 20));
 
-        listIcon.setIconSize(12);
-        listIcon.setStyle("-fx-text-fill: -primary");
-        chartBarIcon.setIconSize(12);
-        chartBarIcon.setStyle("-fx-text-fill: -primary");
-        cartShoppingIcon.setIconSize(12);
-        cartShoppingIcon.setStyle("-fx-text-fill: -primary");
+        Button dashboardButton = new Button("Dashboard", dashboardIcon);
+        Button productsButton = new Button("Productos", productsIcon);
+        Button ordersButton = new Button("Pedidos", ordersIcon);
 
-        final Button dashboardButton = new Button("Dashboard", chartBarIcon);
-        Button productsButton = new Button("Productos", listIcon);
-        Button ordersButton = new Button("Pedidos", cartShoppingIcon);
+        for (Button button  : new Button[]{dashboardButton, productsButton, ordersButton}) {
+            button.setMaxWidth(Double.MAX_VALUE);
+            button.setAlignment(Pos.CENTER_LEFT);
+            button.setGraphicTextGap(12);
+        }
 
         dashboardButton.setOnAction(e -> showDashboard());
         productsButton.setOnAction(e -> showProducts());

@@ -32,9 +32,18 @@
     -fx-cursor: hand;
 }
 
+.sidebar .button .ikonli-font-icon {
+    -fx-icon-size: 16px;
+    -fx-icon-color: -text-secondary;
+}
+
 .sidebar .button:hover {
     -fx-background-color: -primary-light;
     -fx-text-fill: -primary-dark;
+}
+
+.sidebar .button:hover .ikonli-font-icon {
+    -fx-icon-color: -primary-dark;
 }
 
 .card {
