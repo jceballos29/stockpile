@@ -72,7 +72,7 @@ public class ProductFormDialog {
         }
 
         Scene scene = new Scene(form);
-        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
         dialogStage.setScene(scene);
         dialogStage.showAndWait();
 
@@ -182,14 +182,9 @@ public class ProductFormDialog {
     }
 
     private void onDelete() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "¿Eliminar el producto \"" + existingProduct.get().name() + "\"? Esta acción no se puede deshacer.",
-                ButtonType.YES, ButtonType.NO);
-        confirm.setTitle("Confirmar eliminación");
-        confirm.initOwner(dialogStage);
-
-        Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.YES) {
+        boolean confirmed = Dialogs.confirm(dialogStage, "Confirmar eliminación",
+                "¿Eliminar el producto \"" + existingProduct.get().name() + "\"? Esta acción no se puede deshacer.");
+        if (confirmed) {
             deleteProductCommandHandler.handle(new DeleteProductCommand(existingProduct.get().productId()));
             saved = true;
             dialogStage.close();

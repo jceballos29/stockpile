@@ -18,8 +18,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.awt.*;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Ventana principal: sidebar de navegación (izquierda) + área de
@@ -39,6 +41,7 @@ public class MainView {
     private final PayOrderCommandHandler payOrderCommandHandler;
     private final DispatchOrderCommandHandler dispatchOrderCommandHandler;
     private final OrderQueryHandler orderQueryHandler;
+
 
     public MainView(RegisterProductCommandHandler registerProductCommandHandler,
                     UpdateProductCommandHandler updateProductCommandHandler,
@@ -65,13 +68,25 @@ public class MainView {
 
     private VBox buildSidebar() {
 
-        Label logo = new Label("📦 Stockpile");
+        final FontIcon warehouseIcon = new FontIcon("fas-warehouse");
+        final FontIcon listIcon = new FontIcon("fas-list");
+        final FontIcon chartBarIcon = new FontIcon("fas-chart-bar");
+        final FontIcon cartShoppingIcon = new FontIcon("fas-cart-shopping");
+
+        Label logo = new Label("Stockpile");
         logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -primary;");
         logo.setPadding(new Insets(20, 20, 30, 20));
 
-        Button dashboardButton = new Button("Dashboard");
-        Button productsButton = new Button("Productos");
-        Button ordersButton = new Button("Pedidos");
+        listIcon.setIconSize(12);
+        listIcon.setStyle("-fx-text-fill: -primary");
+        chartBarIcon.setIconSize(12);
+        chartBarIcon.setStyle("-fx-text-fill: -primary");
+        cartShoppingIcon.setIconSize(12);
+        cartShoppingIcon.setStyle("-fx-text-fill: -primary");
+
+        final Button dashboardButton = new Button("Dashboard", chartBarIcon);
+        Button productsButton = new Button("Productos", listIcon);
+        Button ordersButton = new Button("Pedidos", cartShoppingIcon);
 
         dashboardButton.setOnAction(e -> showDashboard());
         productsButton.setOnAction(e -> showProducts());
